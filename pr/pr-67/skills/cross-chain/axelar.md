@@ -7,7 +7,7 @@
 
 Both are live on Stellar testnet and mainnet. The Stellar contracts are Rust/Soroban and live in [axelar-amplifier-stellar](https://github.com/axelarnetwork/axelar-amplifier-stellar) — `stellar-axelar-gateway`, `stellar-axelar-gas-service`, and the ITS contracts. Every signature in this file is checked against those sources, which occasionally run ahead of the docs site; when they disagree, the source wins.
 
-> **Addresses:** resolve the current Gateway, Gas Service, and ITS addresses from Axelar's [contract addresses directory](https://docs.axelar.dev/resources/contract-addresses/mainnet/) (and its testnet counterpart) or the amplifier repo's releases at integration time — they are deployment-versioned, so don't hardcode from any tutorial, including this one.
+> **Addresses and chain names:** resolve the current Gateway, Gas Service, and ITS addresses from [`axelar-chains-config/info/mainnet.json`](https://github.com/axelarnetwork/axelar-contract-deployments/blob/main/axelar-chains-config/info/mainnet.json) / [`testnet.json`](https://github.com/axelarnetwork/axelar-contract-deployments/blob/main/axelar-chains-config/info/testnet.json) in the axelar-contract-deployments repo — the [docs directory](https://docs.axelar.dev/resources/contract-addresses/mainnet/) is built from it but doesn't always render every chain. Chain **names** are deployment-versioned too: the same file's `axelarId` is the exact string `destination_chain` wants (Stellar is `stellar` on mainnet but currently `stellar-2026-q1-2` on testnet). Don't hardcode either from any tutorial, including this one.
 
 ## GMP: sending a message from Stellar
 
@@ -42,10 +42,13 @@ pub fn call_contract(
 
 Notes that save debugging time:
 
-- `destination_chain` is Axelar's registered chain name (a string), not a chain ID — take the exact spelling from Axelar's chain directory. A misspelled chain name fails downstream, not at call time.
+- In `pay_gas`, `sender` is the address that will make the follow-up `call_contract` call (from a contract, `env.current_contract_address()`); `spender` is who pays. Getting `sender` wrong orphans the gas payment from the message.
+- `destination_chain` is Axelar's registered chain name (a string), not a chain ID — take the exact spelling from the `axelarId` field in the chains-config file above. A misspelled (or outdated) chain name fails downstream, not at call time.
 - `destination_address` is a string in the destination chain's own format (for EVM, the `0x…` hex address).
 - `payload` is raw `Bytes`. Axelar does not define the codec — you do. For EVM counterparties the convention is ABI encoding, so encode/decode with an ABI library on both ends and version your payload format from day one.
-- Underpaid gas strands the message until topped up; the Gas Service also handles refunds of overpayment. Estimate via Axelar's gas APIs rather than guessing.
+- Gas is paid in XLM through the native-asset SAC (derive its address: `stellar contract id asset --asset native --network <net>`). Underpaid gas strands the message until topped up; overpayment is refundable through the Gas Service, but don't budget around a prompt automatic refund.
+- Estimate gas and track delivery through the Axelarscan GMP API — `https://api.gmp.axelarscan.io` (mainnet) / `https://testnet.api.gmp.axelarscan.io` (testnet): `POST` `{"method": "estimateGasFee", …}` to price the cross-chain leg, `{"method": "searchGMP", …}` to poll a message's status by tx hash.
+- Delivery times are asymmetric: Stellar → EVM executes in under a minute, but EVM-L2 → Stellar first waits out the L2's **L1 finality** (~25–30 minutes on testnet). A message sitting unexecuted that long is normal, not stuck — check `searchGMP` before topping up gas.
 
 ## GMP: receiving a message on Stellar
 
@@ -79,7 +82,7 @@ impl CustomAxelarExecutable for AxelarExample {
 }
 ```
 
-Two compile-verified requirements the example doesn't spell out: `AxelarExecutableInterface` must be in scope (the derive-generated code references it — omitting the import fails with E0405), and your error enum must define a `NotApproved` variant, because the generated `execute` maps the gateway's validation failure onto it.
+Two compile-verified requirements the example doesn't spell out: `AxelarExecutableInterface` must be in scope (the derive-generated code references it — omitting the import fails with E0405), and your error enum must define a `NotApproved` variant, because the generated `execute` maps the gateway's validation failure onto it. Two more live in Cargo.toml: the derive macro only exists behind a feature flag — `stellar-axelar-std = { version = "…", features = ["derive"] }` — and consuming the gateway/gas-service crates as dependencies requires their `library` feature (e.g. `stellar-axelar-gateway = { version = "…", features = ["library"] }`). The example contract's own Cargo.toml in the amplifier repo is the reference for current versions.
 
 Under the hood the generated `execute` calls the Gateway's `validate_message`, which authenticates the exact message (chain, id, sender, payload hash) and flips it to executed so it cannot replay:
 
