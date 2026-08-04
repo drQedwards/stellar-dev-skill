@@ -42,7 +42,7 @@ These bite regardless of which rail you pick. Each companion file adds rail-spec
 2. **Decimals differ.** Classic Stellar assets and their SACs use 7 decimals, but other Soroban token contracts (ITS-deployed tokens included) declare their own — call `decimals()` instead of assuming. USDC is 6 on every supported chain except Stellar (which uses 7); EVM tokens are commonly 18; CCTP messages are always 6-decimal. Convert at every boundary and test with amounts that exercise the last digit (see the worked decimal examples in [cctp.md](cctp.md#usdc-precision-7-decimals-vs-6)).
 3. **Classic Stellar recipients need a trustline first.** A `G…` account cannot receive an issued asset (USDC included) without a trustline to that asset. Bridged funds destined for an account without one will not land. Check and provision before starting the transfer — see `../assets/SKILL.md`.
 4. **Cross-chain is asynchronous.** Every rail has a wait: CCTP waits for finality plus Circle's attestation (seconds to ~15 minutes depending on chain and finality threshold), Axelar waits for validator confirmation, intents wait for a market maker. Build UIs and agents around polling a status, never around "submit and assume".
-5. **Testnet first, always.** Every rail here has a testnet deployment. Do the full round-trip on testnet before touching mainnet — cross-chain mistakes are frequently unrecoverable by design (burns are final, and some misencodings permanently strand funds).
+5. **Testnet first, always.** Every rail here except NEAR Intents has a testnet deployment (intents are filled by real market makers — mainnet only; rehearse with dry quotes and a dust-sized swap instead). Do the full round-trip on testnet before touching mainnet — cross-chain mistakes are frequently unrecoverable by design (burns are final, and some misencodings permanently strand funds).
 
 ## NEAR Intents (intent-based swaps)
 
@@ -50,11 +50,12 @@ These bite regardless of which rail you pick. Each companion file adds rail-spec
 
 [NEAR Intents](https://docs.near-intents.org/) is an intent protocol: the user states an outcome ("swap 0.1 BTC to USDC on Stellar"), market makers compete to execute it. Stellar (XLM and USDC) is a supported destination and source, which makes this the shortest path to "deposit from any chain" UX — there is no bridge contract to integrate on the Stellar side at all.
 
-Integration is the [1Click API](https://docs.near-intents.org/near-intents/integration/distribution-channels/1click-api): `POST /quote` with the asset pair returns a price and a **deposit address**; send funds there and market makers carry out the swap. Official SDKs exist for TypeScript, Go, and Rust.
+Integration is the [1Click API](https://docs.near-intents.org/near-intents/integration/distribution-channels/1click-api): `POST /v0/quote` with the asset pair returns a price and a **deposit address**; send funds there and market makers carry out the swap. `GET /v0/tokens` lists supported assets (the Stellar entries: XLM and USDC, 7-decimal), and a quote with `"dry": true` returns pricing and an ETA without creating a deposit commitment — probe pairs freely, commit later. Official SDKs exist for TypeScript, Go, and Rust.
 
-Two Stellar-specific facts:
+Three Stellar-specific facts (verified against the live API):
 
-- **Stellar deposits are MEMO mode only.** Most chains support a plain deposit address; on Stellar the quote returns a deposit address **plus a memo**, and the memo is what routes your funds to your swap. A deposit without the memo is not credited — treat the memo as part of the address, and refuse to display one without the other.
-- Registering for an API key via the partners portal removes the default integrator fee; anonymous use works but is surcharged.
+- **Stellar deposits are MEMO mode only, and the API enforces it.** A Stellar-origin quote must set `"depositMode": "MEMO"` — without it `/v0/quote` rejects with `Incorrect depositMode for originAsset from stellar chain`. The quote then returns a deposit address **plus a memo** (`depositAddress` + `depositMemo`), and the memo is what routes your funds to your swap. A deposit without the memo is not credited — treat the memo as part of the address, and refuse to display one without the other.
+- **There is no testnet.** Intents are filled by real market makers with real liquidity, so the rehearsal path is dry quotes followed by a dust-sized real swap — not a testnet round trip.
+- Registering for an API key via the partners portal removes the default integrator fee; anonymous use works but is surcharged (it shows up in the quoted spread).
 
 For anything deeper (quote parameters, slippage, refund handling), work from the live 1Click API docs rather than this file — the protocol iterates quickly.
