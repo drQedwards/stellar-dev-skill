@@ -88,6 +88,12 @@ The skills installed via the methods above, grouped by category.
 
 - [ZK Proofs](https://skills.stellar.org/skills/zk-proofs/SKILL.md): Zero-knowledge proofs and privacy patterns on Stellar. Covers Groth16 verification in smart contracts via BLS12-381 host functions (CAP-0059, available), the BN254 + Poseidon proposals (CAP-0074/0075, status-sensitive), and concrete toolchain walkthroughs for Circom (on-chain verifiable today), Noir, and RISC Zero (attestation pattern until BN254 lands). Use when building privacy-preserving applications, ZK-verifier contracts, or wiring a proving toolchain to Stellar.
 
+### Cross-Chain
+
+- [Cross-Chain (CCTP, Axelar)](https://skills.stellar.org/skills/cross-chain/SKILL.md): Cross-chain interoperability for Stellar. Entry point with a rail-selection decision table and shared pitfalls, routing to two companion files — cctp.md (Circle CCTP V2, native USDC burn-and-mint between Stellar and EVM/Solana chains, domain 27, the CctpForwarder requirement for Stellar recipients) and axelar.md (Axelar GMP for Soroban contracts calling contracts on other chains, and the Interchain Token Service for multichain tokens). Also covers NEAR Intents (intent-based cross-chain swaps into XLM or Stellar USDC) at the routing level. Use when bridging USDC to or from Stellar, sending messages between a Stellar contract and another blockchain, making a token exist on multiple chains, or adding cross-chain swaps to an app.
+  - [Axelar on Stellar — GMP and Interchain Tokens](https://skills.stellar.org/skills/cross-chain/axelar.md)
+  - [CCTP V2 on Stellar — native USDC between chains](https://skills.stellar.org/skills/cross-chain/cctp.md)
+
 ### Ecosystem
 
 - [SEPs, CAPs & Ecosystem](https://skills.stellar.org/skills/standards/SKILL.md): Stellar standards, ecosystem, and reference. Covers SEPs (Stellar Ecosystem Proposals), CAPs (Core Advancement Proposals), and a quick map for picking the right standard for wallets, anchors, payments, deposits/withdrawals, federation, deep links, and KYC. Also bundles ecosystem references (DeFi protocols, dev tools, wallets, infra, community projects), curated documentation links, and MCP servers (live tools such as Raven). Use when you need to know which SEP applies, or want a starting point for ecosystem integrations, official docs, or live MCP tooling.
