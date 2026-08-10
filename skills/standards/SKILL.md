@@ -144,6 +144,53 @@ Universal liquidity protocol enabling permissionless lending pools.
 - **GitHub (v2)**: https://github.com/blend-capital/blend-contracts-v2
 - **Integrations**: Meru, Airtm, Lobstr, DeFindex, Beans
 
+#### K2
+Money market on Soroban with a modular router architecture (Aave V3-inspired). Live on mainnet.
+- **Use Case**: Supply to earn variable interest, borrow against collateral, collateral swaps, flash loans
+- **Website**: https://k2lend.com
+- **Docs**: https://docs.k2lend.com — agent-friendly: every page has a `.md` twin, plus [llms.txt](https://docs.k2lend.com/llms.txt) and a full corpus export at [llms-full.txt](https://docs.k2lend.com/llms-full.txt)
+- **Position model**: per reserve, an **aToken** (interest-bearing supply receipt) and a **debt ledger** token; balances are `scaled balance x current index`, so they accrue without user action. Separate liquidity index (linear approximation per interval) and borrow index (full compound). The index updates on the first interaction with a reserve in a ledger.
+- **Rates**: variable only, two-slope curve with a kink at optimal utilization (typically 80%). `Supply Rate = Borrow Rate x Utilization x (1 - Reserve Factor)`. Up to 64 reserves.
+- **Risk**: liquidation threshold 65–85% by asset (85% stables, 65% volatile); health factor < 1.0 is liquidatable with no grace period; partial liquidation by default, 100% when HF < 0.5 or the debt/collateral leg is under $2,000. Liquidation bonus 10% for XLM/SolvBTC/wBTC.
+- **Fees**: reserve factor typically 10–20%; flash loan premium 9 bps default; liquidation protocol fee 0.3% default. No deposit/withdraw/repay fees.
+- **Oracle**: RedStone primary, Reflector fallback. Staleness rejection (1h default, per-asset override), 20% circuit breaker that keeps the last good price, zero-price rejection, and a global oracle pause.
+- **Flash loans**: enabled per reserve plus a global kill switch; repay principal + premium in the same transaction or the whole thing reverts.
+- **DEX integration**: Soroswap and Aquarius adapters power collateral swaps and flash liquidations. **Direct pairs only — no multi-hop routing**, so a swap fails if no direct pair exists.
+- **Liquidation access**: whitelisted liquidators during the launch period, opening to permissionless over time — check current state before building a liquidation bot.
+- **Audits**: Halborn, WatchPug, and a Code4rena contest; Hypernative for runtime monitoring.
+
+**Mainnet contracts.** `kinetic_router` is the entry point you call; the rest are the modules it routes to.
+
+| Contract | Address |
+|----------|---------|
+| `kinetic_router` | `CCTUJZLYFAW7ZNQD2SXMUZIHBUUJJICYRKWLZJ6SK6TGNAWNXOJIV6J7` |
+| `configurator` | `CAYS7DTBBBG6TDT326KYTE72L6Q7NSEI2U2CA7TKCQIWPXB2GNJWU7M4` |
+| `price_oracle` | `CCHRZE2K5TCERZLDO5IXDUWUKLRPVE72DI3TDF2RP6EQKEW6BNOMQRMU` |
+| `interest_rate` | `CATBSCEN73MFGD4LCCC6SFJHGNEHC2QLSSXFZXFCW3NK45BBPGEYDXOC` |
+| `treasury` | `CCQ4J5VLQHM2ORP4K7GBVAJJPK5SGG23DH4RD7QEHAZDHTN7JNESNXKZ` |
+| `incentives` | `CAAMA46SQXQKHZDWAS2CNZVAX67TOMGBVH3DVSZSMDKKVP25VGTDQIRX` |
+| `flash_liquidation` | `CACGHPQB2QOKNAPH3PVGKXXSULNGMNZYWVZQVPTHMWHFRXAGASSRNQ7H` |
+| `reward_token` | `CA4V5C3KWDXBJEPIIKZT2PQWQZB4SY3G3G3S4PYPD5XXGXF5RKQUBE2N` |
+| `soroswap_swap_adapter` | `CDL35ZAOYVDBMSTIKOF4HJKXA7MWHF5ZJNZKES6EAZAOOHLXURSGSYAJ` |
+| `aquarius_swap_adapter` | `CBJBQMSBXYBOSRK6WLBAEVGF2GXQVPTYVVMVDGZF7ZBJHHFT2IGJNDMN` |
+| `aquarius_multihop_swap_handler` | `CB3EHO42TDWT5EG6X62QTMPQPWIETVFLM7Q7DT62Z6MT5J4HP33XKXWE` |
+| `solvbtc_composite_oracle` | `CABOR5KOCMIC226J5B63W5MV75VH5ZPAFEXZFET2JDD2H6IGJY5UPWP4` |
+
+**Reserve tokens.** Read a user's supply balance from the aToken and their debt from the debt ledger. The `underlying` column is the asset's SAC, not a K2 contract.
+
+| Market | Underlying (SAC) | aToken | Debt ledger |
+|--------|------------------|--------|-------------|
+| USDC | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75` | `CDHRPTO3NLGQ2CV75LFV6NF6ZMXIPGPID5GTAZTEICBYLMLKJICOMFZK` | `CBN4GDHRJN7AIARTSTUD3OK7IOCU5V6HTSOTVARFUA5KVE7XSNBZUQG6` |
+| XLM | `CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA` | `CDTHJR27QWKAPCFTZWKP7GTX3RZO7HACVAC2KLCW2RENCMOCI35ORU5K` | `CC3OKG4VDLGFBS7V6UTSJVP3YL3A4OLV63EMTNUU3MQ2AOAU4M65H7QG` |
+| PYUSD | `CCCRWH6Q3FNP3I2I57BDLM5AFAT7O6OF6GKQOC6SSJNDAVRZ57SPHGU2` | `CA7ELGRS4FNCYJPRZSNLF7NDD6VVOFZKFKMY56VVSG3RMNYTFQNNFUTD` | `CAVFE34MWBIXT4AOFXPTI7U7JTLPHKG4YWDDMRXVJOIZKG6HFJW3IHXV` |
+| SolvBTC | `CBIJBDNZNF4X35BJ4FFZWCDBSCKOP5NB4PLG4SNENRMLAPYG4P5FM6VN` | `CDDTJ7OZU2WZAEZNTUZWIRAE4EMP5CF63M3INFQWTLX4ENMYUFK6RCTX` | `CADGKVZKBNLPKFIWDWTRSQAPBWH77H2OPJIF3WGVL7VADVLCXDZ5CSNH` |
+
+wBTC appears in K2's risk-parameter and liquidation tables as a supported asset but has no published reserve token set — treat only the four markets above as live.
+
+**External contracts K2 reads or routes through** (not K2-owned): Reflector Stellar mainnet DEX oracle `CALI2BYU2JE6WVRUFYTS6MSBNEHGJ35P4AVCZYF3B6QOE3QKOB2PLE6M`, Reflector external CEX/DEX oracle `CAFJZQWSED6YAWZU3GWRTOCNPPCGBN32L7QV43XX5LZLFTK6JLN34DLN`, RedStone batch adapter `CA526Y2NQWGWVVQ7RFFPGAZMU66PSYJ3UC2MTVAV4ZU7OM5BOPHDXUSG`.
+
+> Every address above was resolved on pubnet (2026-07-31). Legacy manual reserve tokens and published-but-uninstantiated WASM hashes are omitted; [docs.k2lend.com/contracts](https://docs.k2lend.com/contracts) is the source of truth — re-check it before hard-coding, since reserves and adapters can be added or rotated.
+
 #### Slender
 First non-custodial lending protocol on Stellar with flash loan support.
 - **Use Case**: Lending, borrowing, flash loans
