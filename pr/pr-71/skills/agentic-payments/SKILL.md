@@ -604,7 +604,7 @@ npm install @stellar/mpp mppx @stellar/stellar-sdk
 | `mppx/server` | `import { Mppx, Store } from "mppx/server"` — framework-agnostic server + `Store` |
 | `mppx/client` | `import { Mppx } from "mppx/client"` — client; also re-exported by `@stellar/mpp/charge/client` |
 
-> The bare `mppx` root does **not** export a usable `Mppx` or `Store` — always import from the subpaths above.
+> The bare `mppx` root does **not** export `Mppx` at all — always import it from the subpaths above. (`Store` *is* re-exported from the root and is the same object as `mppx/server`'s, but importing it from `mppx/server` keeps the server imports together.)
 
 ## Testnet runbook
 
