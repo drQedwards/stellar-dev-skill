@@ -77,9 +77,10 @@ Treat this file as a routing map, not a source of final governance/status truth.
 - [CAP-0067](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md): protocol/runtime improvements including asset/event model changes
 
 ### Newer and draft crypto/features
-- [CAP-0074](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0074.md): BN254 host functions proposal
-- [CAP-0075](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0075.md): Poseidon/Poseidon2 proposal
+- [CAP-0074](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0074.md): BN254 host functions (G1 add/mul, pairing check) — Final, Protocol 25+
+- [CAP-0075](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0075.md): Poseidon/Poseidon2 permutation primitives — Final, Protocol 25+
 - [CAP-0079](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0079.md): muxed-address strkey conversion proposal
+- [CAP-0080](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0080.md): BN254 G1 MSM, Fr arithmetic, on-curve checks — Implemented, Protocol 26+
 
 Use the CAP preamble status fields as the source of truth for implementation readiness.
 
@@ -676,8 +677,9 @@ Always verify CAP status and network support before treating any ZK primitive as
 
 ### Protocol & Specifications
 - [Protocol upgrades](https://stellar.org/protocol-upgrades) - Upgrade timeline and network context
-- [CAP-0074](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0074.md) - BN254 host functions proposal
-- [CAP-0075](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0075.md) - Poseidon/Poseidon2 host functions proposal
+- [CAP-0074](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0074.md) - BN254 host functions (G1 add/mul, pairing check) — Final, Protocol 25+
+- [CAP-0075](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0075.md) - Poseidon/Poseidon2 permutation primitives — Final, Protocol 25+
+- [CAP-0080](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0080.md) - BN254 G1 MSM, Fr arithmetic, on-curve checks — Implemented, Protocol 26+
 
 ### SDK Documentation
 - [Soroban SDK BN254 module](https://docs.rs/soroban-sdk/latest/soroban_sdk/crypto/bn254/) - Verify availability in your pinned SDK version
