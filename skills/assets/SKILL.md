@@ -251,8 +251,8 @@ is in a deletable state. Before submitting:
 2. **Clear the balance.** The trustline balance must be exactly `0` — send
    remaining funds back to the issuer (burns them) or to another account.
 3. **Clear offers / buying liabilities.** Open DEX offers that buy the asset
-   create buying liabilities; cancel them (`manageSellOffer`/`manageBuyOffer`
-   with `amount: "0"`) before removal.
+   create buying liabilities; cancel them before removal (`manageSellOffer`
+   with `amount: "0"`, `manageBuyOffer` with `buyAmount: "0"`).
 4. **Exit liquidity pool positions.** An asset trustline referenced by a
    liquidity pool (`liquidity_pool_use_count > 0`, per CAP-0038) cannot be
    deleted — withdraw from the pool and remove the pool-share trustline first.
@@ -273,6 +273,10 @@ if (parseFloat(trustline.balance) !== 0)
   throw new Error("Balance must be 0 — send funds away or back to issuer");
 if (parseFloat(trustline.buying_liabilities) !== 0)
   throw new Error("Cancel open offers buying this asset first");
+
+// Liquidity-pool usage (precondition 4) is not visible on this balance line —
+// if the asset is still in one of the account's pools, the submit below fails
+// with op_cannot_delete. Withdraw and remove the pool-share trustline first.
 
 // 2. Submit removal and surface the specific result code
 const removeTrustTx = new StellarSdk.TransactionBuilder(account, {
