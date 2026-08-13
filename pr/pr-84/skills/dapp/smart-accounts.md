@@ -24,8 +24,8 @@ const kit = new SmartAccountKit({
 });
 
 // On page load - silent restore from stored session
-const result = await kit.connectWallet();
-if (!result) {
+const restored = await kit.connectWallet();
+if (!restored) {
   showConnectButton(); // No stored session
 }
 

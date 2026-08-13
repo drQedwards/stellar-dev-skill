@@ -383,7 +383,7 @@ Worked examples: [soroban-examples](https://github.com/stellar/soroban-examples)
 
 ## Fees and resource limits
 
-Soroban transactions pay an inclusion fee (classic surge-priced mechanic) plus a resource fee based on declared consumption: CPU instructions, ledger reads/writes (entries and bytes), transaction size, events size, and rent. Rent/events are refundable if unused; instructions and I/O are charged as declared — so submitters simulate first to size the declaration, and a transaction that exceeds its declaration fails. If actual state diverges from simulation (concurrent writes), costs can shift — leave headroom.
+Contract transactions pay an inclusion fee (classic surge-priced mechanic) plus a resource fee based on declared consumption: CPU instructions, ledger reads/writes (entries and bytes), transaction size, events size, and rent. Rent/events are refundable if unused; instructions and I/O are charged as declared — so submitters simulate first to size the declaration, and a transaction that exceeds its declaration fails. If actual state diverges from simulation (concurrent writes), costs can shift — leave headroom.
 
 Current mainnet per-transaction ceilings (network-configured, change by validator vote — check the live values on [Stellar Lab's Network Limits page](https://lab.stellar.org/network-limits) or with `stellar network settings --network mainnet`):
 
@@ -421,19 +421,35 @@ Then: drop heavy dependencies (full `serde`, `regex` — stay in no_std SDK idio
 
 ## Troubleshooting
 
+Rows are keyed by the text the CLI or the compiler actually prints — search this table for the string you got, not for a paraphrase of it.
+
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `contract exceeds maximum size` | WASM > 128KB | See [Contract size](#contract-size) |
 | `cannot find macro println` / `std` errors | Missing `#![no_std]` | Add as first line of `lib.rs`; use SDK types |
 | `can't find crate for core` targeting wasm | Missing target | `rustup target add wasm32v1-none` |
+| `reading file target/wasm32v1-none/release/my_contract.wasm: No such file or directory (os error 2)` | The `--wasm` path isn't where the build wrote the artifact — or nothing was built at all | Diagnose both branches: [No wasm at the path you passed](#no-wasm-at-the-path-you-passed) |
+| ``linker `link.exe` not found`` plus ``the msvc targets depend on the msvc linker but `link.exe` was not found`` (Windows) | Host-target linking. The wasm itself links with the bundled `rust-lld`, but a contract build still compiles `soroban-sdk`'s proc-macro crate and build script *for the host* — so this hits `stellar contract build` as well as `cargo test` and `cargo install stellar-cli` | Install Visual Studio 2017+ or Build Tools for Visual Studio with the Visual C++ ("Desktop development with C++") workload — VS Code alone is not sufficient. For the CLI itself, take the prebuilt binary instead: `winget install --id Stellar.StellarCLI` |
 | `cargo test` fails inside `soroban-env-host` (`ed25519_dalek` trait errors) | A semver-loose transitive dep resolved to an incompatible major (e.g. ed25519-dalek 3.x, mid-2026) | Pin it back: `cargo update ed25519-dalek@3.0.0 --precise 2.2.0` |
 | Calls fail after inactivity, data "missing" | Storage TTL expired → archived | Extend TTLs proactively; simulation auto-restores archived persistent entries |
 | Temporary data vanished | Wrong storage type | Use `persistent()` for data that must survive |
-| `Error: identity "alice" not found` | CLI identity missing | `stellar keys generate alice --network testnet --fund` |
+| `Failed to find config identity for alice` / `invalid signing key or identity name` | CLI identity missing or misspelled | `stellar keys ls` to see what's saved; `stellar keys generate alice --network testnet --fund` to create it |
+| `An identity with the name 'alice' already exists` | `stellar keys generate` / `keys add` refuse to clobber a saved identity | Reuse it (`stellar keys public-key alice`) or pick another name. `--overwrite` replaces the stored secret with no way back — never on a key that holds funds |
+| `alias 'x' is already referencing contract 'C…' on network '…'` | `stellar contract alias add` won't rebind an alias that points somewhere else | Pass `--overwrite`, or pick another alias — note `stellar contract deploy --alias` always overwrites without asking |
+| `Unable to fund account alice on …`, **and the command still exits 0** | Friendbot request failed. The key *was* saved; the account was never created, so the next command fails on a nonexistent account | Retry against the network the error names — `stellar keys fund alice --network testnet` — which exits non-zero and prints the real cause (`funding failed: …`). Friendbot only exists on testnet/futurenet/local — on mainnet, fund from an already-funded account |
 | `invalid argument format` on invoke | Wrong CLI arg syntax | Plain strings for addresses; JSON for complex types |
-| `transaction simulation failed` | Soroban tx not simulated/assembled | Simulate, then `assembleTransaction` before signing |
+| `transaction simulation failed` | Contract tx not simulated/assembled | Simulate, then `assembleTransaction` before signing |
 | Auth fails only in cross-contract flows | Signed auth tree doesn't match actual call path | Rebuild the tree from simulation; re-auth at each layer (see [Authorization](#authorization)) |
 | `tx_bad_auth` | Wrong network passphrase or signer | Match passphrase to network; check signing identity |
 | `tx_bad_seq` | Stale sequence number | Reload the account before building the tx |
+
+### No wasm at the path you passed
+
+`stellar contract build` reports the artifact it wrote as `Wasm File:` under `Build Summary:`. That path — not a reconstructed one — is what `--wasm` takes. When it doesn't exist, decide which of two things happened:
+
+- **A wasm was built, somewhere else.** In a Cargo workspace artifacts land in the *workspace-root* `target/` by default, not in the package's own directory, and the filename is the package name with `-` replaced by `_` (package `my-contract` → `my_contract.wasm`). `CARGO_TARGET_DIR` or `build.target-dir` moves that root elsewhere, which is why the printed `Wasm File:` path is the one to trust. Deploying from inside `contracts/my-contract/` with a relative `target/...` path is the usual version of this.
+- **No wasm was built at all, and the build still exited 0.** Run from the workspace root, the build compiles only workspace *default members* whose `[lib]` declares `crate-type = [..., "cdylib"]` — every other package is skipped silently. Add the `cdylib` crate type (see [SKILL.md](SKILL.md#project-setup)) and check the package is a *default* member: if the root `Cargo.toml` sets `workspace.default-members`, a package listed only in `workspace.members` is skipped. `stellar contract build --package my-contract` (or running from that package's own directory) selects by name instead, and fails loudly — `package my-contract not found` — rather than quietly building nothing.
+
+Inside a workspace you can skip the path entirely: `stellar contract deploy` with neither `--wasm` nor `--wasm-hash` builds the project and uses its own output.
 
 Client-side issues (wallet detection, trustlines, transaction building from JS) are covered in `../dapp/SKILL.md` and `../data/SKILL.md`.

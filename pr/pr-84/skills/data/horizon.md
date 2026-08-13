@@ -103,24 +103,42 @@ const effects = await server
 
 #### Streaming (Server-Sent Events)
 
+Reconnecting at `"now"` silently drops everything that arrived while the
+connection was down. Persist each record's `paging_token` and resume from it:
+
 ```typescript
-// Stream transactions
-const closeHandler = server
-  .transactions()
-  .forAccount(publicKey)
-  .cursor("now")
-  .stream({
-    onmessage: (tx) => {
-      console.log("New transaction:", tx.hash);
-    },
-    onerror: (error) => {
-      console.error("Stream error:", error);
-    },
-  });
+// Durable in production (DB/Redis) — an in-memory cursor is lost on restart.
+let cursor = (await loadCursor()) ?? "now";
+let closeHandler: (() => void) | undefined;
+
+function subscribe() {
+  closeHandler = server
+    .transactions()
+    .forAccount(publicKey)
+    .cursor(cursor)
+    .stream({
+      onmessage: (tx) => {
+        console.log("New transaction:", tx.hash);
+        // Advance only after handling, so a crash mid-work replays the record.
+        cursor = tx.paging_token;
+        void saveCursor(cursor);
+      },
+      onerror: (error) => {
+        console.error(`Stream error, resuming from ${cursor}:`, error);
+        closeHandler?.();
+        setTimeout(subscribe, 5_000); // back off, then resume from the cursor
+      },
+    });
+}
+
+subscribe();
 
 // Close stream when done
-closeHandler();
+closeHandler?.();
 ```
+
+Resuming replays the record at the cursor, so make `onmessage` idempotent
+(key off `tx.hash`) rather than assuming exactly-once delivery.
 
 #### Submit Transaction
 

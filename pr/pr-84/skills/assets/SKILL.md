@@ -231,11 +231,83 @@ const changeTrustTx = new StellarSdk.TransactionBuilder(userAccount, {
   .addOperation(
     StellarSdk.Operation.changeTrust({
       asset: asset,
-      limit: "10000", // 0 to remove trustline
+      limit: "10000", // Max amount to hold (see "Remove Trustline" for limit: "0")
     })
   )
   .setTimeout(180)
   .build();
+```
+
+### Remove Trustline
+
+`ChangeTrust` with `limit: "0"` deletes a trustline, but only if the trustline
+is in a deletable state. Before submitting:
+
+1. **Identify the asset by code AND issuer.** A wallet-display entry or a
+   claimable balance is not a trustline — only an actual classic asset
+   trustline (or liquidity pool share) on the account can be removed with
+   `ChangeTrust`. Claimable balances are removed by claiming or clawing them
+   back, not by `ChangeTrust`.
+2. **Clear the balance.** The trustline balance must be exactly `0` — send
+   remaining funds back to the issuer (burns them) or to another account.
+3. **Clear offers / buying liabilities.** Open DEX offers that buy the asset
+   create buying liabilities; cancel them before removal (`manageSellOffer`
+   with `amount: "0"`, `manageBuyOffer` with `buyAmount: "0"`).
+4. **Exit liquidity pool positions.** An asset trustline referenced by a
+   liquidity pool (`liquidity_pool_use_count > 0`, per CAP-0038) cannot be
+   deleted — withdraw from the pool and remove the pool-share trustline first.
+
+```typescript
+// 1. Check the trustline is deletable
+const account = await server.loadAccount(userPublicKey);
+const trustline = account.balances.find(
+  (b) =>
+    b.asset_type !== "native" &&
+    b.asset_type !== "liquidity_pool_shares" &&
+    b.asset_code === asset.getCode() &&
+    b.asset_issuer === asset.getIssuer()
+);
+
+if (!trustline) throw new Error("No trustline (display/claimable state only?)");
+if (parseFloat(trustline.balance) !== 0)
+  throw new Error("Balance must be 0 — send funds away or back to issuer");
+if (parseFloat(trustline.buying_liabilities) !== 0)
+  throw new Error("Cancel open offers buying this asset first");
+
+// Liquidity-pool usage (precondition 4) is not visible on this balance line —
+// if the asset is still in one of the account's pools, the submit below fails
+// with op_cannot_delete. Withdraw and remove the pool-share trustline first.
+
+// 2. Submit removal and surface the specific result code
+const removeTrustTx = new StellarSdk.TransactionBuilder(account, {
+  fee: StellarSdk.BASE_FEE,
+  networkPassphrase: StellarSdk.Networks.TESTNET,
+})
+  .addOperation(
+    StellarSdk.Operation.changeTrust({
+      asset: asset,
+      limit: "0", // Delete the trustline
+    })
+  )
+  .setTimeout(180)
+  .build();
+
+removeTrustTx.sign(userKeypair);
+
+try {
+  await server.submitTransaction(removeTrustTx);
+} catch (e) {
+  const codes = e.response?.data?.extras?.result_codes?.operations ?? [];
+  if (codes.includes("op_invalid_limit")) {
+    // CHANGE_TRUST_INVALID_LIMIT: balance or buying liabilities remain
+    throw new Error("Clear balance and open offers before removing trustline");
+  }
+  if (codes.includes("op_cannot_delete")) {
+    // CHANGE_TRUST_CANNOT_DELETE: trustline is used by a liquidity pool
+    throw new Error("Withdraw from liquidity pools referencing this asset first");
+  }
+  throw e;
+}
 ```
 
 ### Check Trustline Status
@@ -433,6 +505,8 @@ Standard contract interface for NFTs on Stellar. Reference implementations avail
 - Handle trustline creation in onboarding flow
 - Respect trustline limits
 - Monitor for frozen/deauthorized status
+- Before removing a trustline (`limit: "0"`): zero the balance, cancel offers
+  buying the asset, and exit liquidity pools that reference it
 
 ### Security
 - Validate asset issuer, not just code
