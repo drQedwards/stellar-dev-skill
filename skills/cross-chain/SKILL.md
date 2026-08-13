@@ -22,14 +22,14 @@ Rules of thumb: if the asset is USDC and both ends are CCTP chains, CCTP is the 
 
 - Bridging USDC between Stellar and Ethereum, Base, Arbitrum, Solana, or another CCTP-supported chain
 - Receiving bridged USDC into a Stellar account or contract (and not bricking the funds — see the forwarder warning below)
-- Writing a Soroban contract that sends messages to or receives messages from contracts on other chains
+- Writing a Stellar smart contract that sends messages to or receives messages from contracts on other chains
 - Deploying an interchain token, or connecting an existing Stellar asset to other ecosystems
 - Adding a "deposit from any chain" or cross-chain swap flow to a wallet or dapp
 
 ## Related skills
 
 - Trustlines, SAC deployment, asset anatomy → `../assets/SKILL.md`
-- Writing the Soroban contracts that send/receive messages → `../smart-contracts/SKILL.md`
+- Writing the Stellar smart contracts that send/receive messages → `../smart-contracts/SKILL.md`
 - Frontend transaction building, Freighter signing, RPC submission → `../dapp/SKILL.md`
 - Watching for the destination-side mint or contract events → `../data/SKILL.md`
 - Paying AI agents (x402/MPP) rather than bridging → `../agentic-payments/SKILL.md`
@@ -39,7 +39,7 @@ Rules of thumb: if the asset is USDC and both ends are CCTP chains, CCTP is the 
 These bite regardless of which rail you pick. Each companion file adds rail-specific ones.
 
 1. **Address formats do not translate.** Stellar addresses are `strkey` strings (`G…` accounts, `C…` contracts, `M…` muxed); EVM uses 20-byte hex; Solana uses base58. Every rail defines its own encoding for foreign addresses (CCTP: raw 32-byte payloads; Axelar: strings + bytes payloads). Never paste an address from one chain into a field meant for another — encode it the way the rail specifies, and validate with the SDK (`StrKey.isValidEd25519PublicKey` / `isValidContract`) before encoding.
-2. **Decimals differ.** Classic Stellar assets and their SACs use 7 decimals, but other Soroban token contracts (ITS-deployed tokens included) declare their own — call `decimals()` instead of assuming. USDC is 6 on every supported chain except Stellar (which uses 7); EVM tokens are commonly 18; CCTP messages are always 6-decimal. Convert at every boundary and test with amounts that exercise the last digit (see the worked decimal examples in [cctp.md](cctp.md#usdc-precision-7-decimals-vs-6)).
+2. **Decimals differ.** Classic Stellar assets and their SACs use 7 decimals, but other Stellar token contracts (ITS-deployed tokens included) declare their own — call `decimals()` instead of assuming. USDC is 6 on every supported chain except Stellar (which uses 7); EVM tokens are commonly 18; CCTP messages are always 6-decimal. Convert at every boundary and test with amounts that exercise the last digit (see the worked decimal examples in [cctp.md](cctp.md#usdc-precision-7-decimals-vs-6)).
 3. **Classic Stellar recipients need a trustline first.** A `G…` account cannot receive an issued asset (USDC included) without a trustline to that asset. Bridged funds destined for an account without one will not land. Check and provision before starting the transfer — see `../assets/SKILL.md`.
 4. **Cross-chain is asynchronous.** Every rail has a wait: CCTP waits for finality plus Circle's attestation (seconds to ~15 minutes depending on chain and finality threshold), Axelar waits for validator confirmation, intents wait for a market maker. Build UIs and agents around polling a status, never around "submit and assume".
 5. **Testnet first, always.** Every rail here except NEAR Intents has a testnet deployment (intents are filled by real market makers — mainnet only; rehearse with dry quotes and a dust-sized swap instead). Do the full round-trip on testnet before touching mainnet — cross-chain mistakes are frequently unrecoverable by design (burns are final, and some misencodings permanently strand funds).

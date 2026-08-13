@@ -146,7 +146,7 @@ Universal liquidity protocol enabling permissionless lending pools.
 - **Integrations**: Meru, Airtm, Lobstr, DeFindex, Beans
 
 #### K2
-Money market on Soroban with a modular router architecture (Aave V3-inspired). Live on mainnet.
+Money market on Stellar with a modular router architecture (Aave V3-inspired). Live on mainnet.
 - **Use Case**: Supply to earn variable interest, borrow against collateral, collateral swaps, flash loans
 - **Website**: https://k2lend.com
 - **Docs**: https://docs.k2lend.com — agent-friendly: every page has a `.md` twin, plus [llms.txt](https://docs.k2lend.com/llms.txt) and a full corpus export at [llms-full.txt](https://docs.k2lend.com/llms-full.txt)

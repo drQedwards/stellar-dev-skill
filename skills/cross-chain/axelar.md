@@ -2,10 +2,10 @@
 
 [Axelar](https://docs.axelar.dev/) connects Stellar to EVM chains and the wider Axelar ecosystem through its amplifier stack. Two products matter here:
 
-- **GMP (General Message Passing)** — a Soroban contract sends arbitrary payloads to a contract on another chain, or receives and executes payloads from one.
+- **GMP (General Message Passing)** — a Stellar smart contract sends arbitrary payloads to a contract on another chain, or receives and executes payloads from one.
 - **ITS (Interchain Token Service)** — tokens that exist on multiple chains: mint new ones, or connect an existing Stellar token.
 
-Both are live on Stellar testnet and mainnet. The Stellar contracts are Rust/Soroban and live in [axelar-amplifier-stellar](https://github.com/axelarnetwork/axelar-amplifier-stellar) — `stellar-axelar-gateway`, `stellar-axelar-gas-service`, and the ITS contracts. Every signature in this file is checked against those sources, which occasionally run ahead of the docs site; when they disagree, the source wins.
+Both are live on Stellar testnet and mainnet. The Stellar contracts are Rust smart contracts and live in [axelar-amplifier-stellar](https://github.com/axelarnetwork/axelar-amplifier-stellar) — `stellar-axelar-gateway`, `stellar-axelar-gas-service`, and the ITS contracts. Every signature in this file is checked against those sources, which occasionally run ahead of the docs site; when they disagree, the source wins.
 
 > **Addresses and chain names:** resolve the current Gateway, Gas Service, and ITS addresses from [`axelar-chains-config/info/mainnet.json`](https://github.com/axelarnetwork/axelar-contract-deployments/blob/main/axelar-chains-config/info/mainnet.json) / [`testnet.json`](https://github.com/axelarnetwork/axelar-contract-deployments/blob/main/axelar-chains-config/info/testnet.json) in the axelar-contract-deployments repo — the [docs directory](https://docs.axelar.dev/resources/contract-addresses/mainnet/) is built from it but doesn't always render every chain. Chain **names** are deployment-versioned too: the same file's `axelarId` is the exact string `destination_chain` wants (Stellar is `stellar` on mainnet but currently `stellar-2026-q1-2` on testnet). Don't hardcode either from any tutorial, including this one.
 
@@ -103,7 +103,7 @@ Axelar's [Stellar GMP guide](https://docs.axelar.dev/dev/general-message-passing
 
 ## ITS: tokens on multiple chains
 
-ITS on Stellar operates in **hub mode**: token messages route through Axelar's ITS Hub rather than chain-to-chain. Components: the `InterchainTokenService` contract (coordination), a `TokenManager` per token (mint/burn/lock), and `InterchainToken` (a Stellar token interface implementation — meaning ITS-deployed tokens are Soroban contracts, addressable like any `C…` token).
+ITS on Stellar operates in **hub mode**: token messages route through Axelar's ITS Hub rather than chain-to-chain. Components: the `InterchainTokenService` contract (coordination), a `TokenManager` per token (mint/burn/lock), and `InterchainToken` (a Stellar token interface implementation — meaning ITS-deployed tokens are Stellar smart contracts, addressable like any `C…` token).
 
 **Mint a new multichain token** — deploy locally, then extend it to each destination chain (each remote deployment pays its own gas):
 
@@ -158,7 +158,7 @@ fn flow_in_amount(env: &Env, token_id: BytesN<32>) -> i128;
 ## ITS pitfalls
 
 - **`token_id` is the identity, not the address.** The same token has different contract addresses per chain but one `BytesN<32>` token id — persist the id, derive addresses from it.
-- **Decimals don't auto-reconcile across ecosystems.** Classic-asset SACs are 7-decimal, but a canonical registration accepts any Soroban token, and ITS tokens carry whatever `TokenMetadata` declared — read `decimals()` from the token instead of assuming 7, and think through amount scaling before wiring UIs to EVM counterparts (test a dust-sized transfer first).
+- **Decimals don't auto-reconcile across ecosystems.** Classic-asset SACs are 7-decimal, but a canonical registration accepts any Stellar token contract, and ITS tokens carry whatever `TokenMetadata` declared — read `decimals()` from the token instead of assuming 7, and think through amount scaling before wiring UIs to EVM counterparts (test a dust-sized transfer first).
 - **Remote deployments and transfers both prepay gas** via `gas_token` — budget one gas payment per destination chain, not one total.
 - **Flow limits fail closed.** A transfer that would exceed the window's limit is rejected, not queued — surface that error distinctly from "bridge is broken".
 

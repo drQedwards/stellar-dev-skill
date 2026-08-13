@@ -12,7 +12,7 @@ Read this file top to bottom before writing any code: CCTP on Stellar has one mi
 
 ## Contracts and addresses
 
-Stellar CCTP runs on three Soroban contracts ([Circle's contract reference](https://developers.circle.com/cctp/references/stellar-contracts) is canonical):
+Stellar CCTP runs on three Stellar smart contracts ([Circle's contract reference](https://developers.circle.com/cctp/references/stellar-contracts) is canonical):
 
 | Contract | Role |
 |---|---|
@@ -107,7 +107,7 @@ Practical consequences: pass 7-decimal subunits (`i128`) to Stellar-side calls a
 Two Stellar transactions in the plain flow — an allowance, then the burn — because `TokenMessengerMinter` pulls funds via `transfer_from`:
 
 1. `approve` the USDC SAC with `TokenMessengerMinter` as spender. Most basic version: approve exactly the transfer amount, with a short `live_until_ledger` (current ledger + ~100 ≈ 8 minutes) so nothing lingers. If an existing allowance already covers the amount (`allowance(from, spender)`), skip this step — or collapse approve + burn into one transaction with the wrapper below.
-2. Call `deposit_for_burn`. Verified argument order (Soroban):
+2. Call `deposit_for_burn`. Verified argument order (Stellar):
 
 ```typescript
 import { Address, Contract, TransactionBuilder, nativeToScVal, BASE_FEE } from "@stellar/stellar-sdk";
@@ -148,7 +148,7 @@ Destination-side reference: CCTP V2 uses the **same contract addresses on every 
 
 Pass Iris's `message` and `attestation` hex to `receiveMessage` verbatim. Domain IDs are Circle-assigned — Ethereum 0, Solana 5, Base 6, Arc 26, Stellar 27; the full table is in [supported chains and domains](https://developers.circle.com/cctp/concepts/supported-chains-and-domains) (a mainnet listing covers its official testnet too).
 
-**One-signature variant.** The two-transaction dance (approve, then burn) collapses into one Soroban transaction with a ~40-line wrapper contract, because Soroban's auth tree lets a single signature authorize both nested calls. From the [reference demo](https://github.com/ElliotFriend/stellar-cctp-demo) (`contracts/stellar/cctp-wrapper/`), verbatim:
+**One-signature variant.** The two-transaction dance (approve, then burn) collapses into one Stellar transaction with a ~40-line wrapper contract, because the contract auth tree lets a single signature authorize both nested calls. From the [reference demo](https://github.com/ElliotFriend/stellar-cctp-demo) (`contracts/stellar/cctp-wrapper/`), verbatim:
 
 ```rust
 pub fn approve_and_deposit(
@@ -207,7 +207,7 @@ Worth studying in the source:
 |---|---|
 | Hook-data encoding ("the most important code in the repo" — get it wrong and funds are lost) | `src/lib/evm/cctp.ts` |
 | Stellar-side burns: direct, wrapper, wrapper-with-hook | `src/lib/stellar/cctp.ts` |
-| The one-signature Soroban wrapper | `contracts/stellar/cctp-wrapper/` |
+| The one-signature Stellar wrapper | `contracts/stellar/cctp-wrapper/` |
 | Iris polling with the hash-normalization gotcha | `src/lib/circle/iris.ts` |
 | Chain/domain/address registry | `src/lib/config.ts` |
 | EVM-side UX ladder: 2-tx approve, 1-tx EIP-2612 permit wrapper, 1-click EIP-5792 `wallet_sendCalls` | `src/lib/evm/cctp.ts`, `contracts/evm/cctp-wrapper/` |

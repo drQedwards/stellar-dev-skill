@@ -383,7 +383,7 @@ Worked examples: [soroban-examples](https://github.com/stellar/soroban-examples)
 
 ## Fees and resource limits
 
-Soroban transactions pay an inclusion fee (classic surge-priced mechanic) plus a resource fee based on declared consumption: CPU instructions, ledger reads/writes (entries and bytes), transaction size, events size, and rent. Rent/events are refundable if unused; instructions and I/O are charged as declared — so submitters simulate first to size the declaration, and a transaction that exceeds its declaration fails. If actual state diverges from simulation (concurrent writes), costs can shift — leave headroom.
+Contract transactions pay an inclusion fee (classic surge-priced mechanic) plus a resource fee based on declared consumption: CPU instructions, ledger reads/writes (entries and bytes), transaction size, events size, and rent. Rent/events are refundable if unused; instructions and I/O are charged as declared — so submitters simulate first to size the declaration, and a transaction that exceeds its declaration fails. If actual state diverges from simulation (concurrent writes), costs can shift — leave headroom.
 
 Current mainnet per-transaction ceilings (network-configured, change by validator vote — check the live values on [Stellar Lab's Network Limits page](https://lab.stellar.org/network-limits) or with `stellar network settings --network mainnet`):
 
@@ -438,7 +438,7 @@ Rows are keyed by the text the CLI or the compiler actually prints — search th
 | `alias 'x' is already referencing contract 'C…' on network '…'` | `stellar contract alias add` won't rebind an alias that points somewhere else | Pass `--overwrite`, or pick another alias — note `stellar contract deploy --alias` always overwrites without asking |
 | `Unable to fund account alice on …`, **and the command still exits 0** | Friendbot request failed. The key *was* saved; the account was never created, so the next command fails on a nonexistent account | Retry against the network the error names — `stellar keys fund alice --network testnet` — which exits non-zero and prints the real cause (`funding failed: …`). Friendbot only exists on testnet/futurenet/local — on mainnet, fund from an already-funded account |
 | `invalid argument format` on invoke | Wrong CLI arg syntax | Plain strings for addresses; JSON for complex types |
-| `transaction simulation failed` | Soroban tx not simulated/assembled | Simulate, then `assembleTransaction` before signing |
+| `transaction simulation failed` | Contract tx not simulated/assembled | Simulate, then `assembleTransaction` before signing |
 | Auth fails only in cross-contract flows | Signed auth tree doesn't match actual call path | Rebuild the tree from simulation; re-auth at each layer (see [Authorization](#authorization)) |
 | `tx_bad_auth` | Wrong network passphrase or signer | Match passphrase to network; check signing identity |
 | `tx_bad_seq` | Stale sequence number | Reload the account before building the tx |

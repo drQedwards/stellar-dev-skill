@@ -274,7 +274,7 @@ export async function buildPaymentTx(
 
 ### Smart Contract Invocation (`contract.Client`)
 
-The canonical way to call a Soroban contract from JS is the `contract.Client`, not hand-built `Contract.call` + `assembleTransaction`. The client reads the contract's interface from the network, so each method is callable by name and returns an `AssembledTransaction`. You get a native JS result and don't build ScVals by hand.
+The canonical way to call a Stellar smart contract from JS is the `contract.Client`, not hand-built `Contract.call` + `assembleTransaction`. The client reads the contract's interface from the network, so each method is callable by name and returns an `AssembledTransaction`. You get a native JS result and don't build ScVals by hand.
 
 ```typescript
 import { contract } from "@stellar/stellar-sdk";
