@@ -71,10 +71,15 @@ The skills installed via the methods above, grouped by category.
 ### Agentic Payments
 
 - [Agent Payments (x402 + MPP)](https://skills.stellar.org/skills/agentic-payments/SKILL.md): Agentic and machine-to-machine payments on Stellar. Covers x402 (HTTP 402 paid APIs via OZ Channels facilitator, fee-sponsored clients) and MPP (Machine Payments Protocol) in both Charge mode (per-request SAC) and Session mode (channel-backed off-chain commits, high-frequency; formerly called Channel mode). Defaults to USDC (SEP-41 SAC) on `stellar:testnet`/`stellar:pubnet` (CAIP-2). Use when selling a paid API to AI agents, building an x402 client, or designing a payment-channel architecture for high-frequency agent traffic.
+  - [MPP — Machine Payments Protocol (Charge + Session)](https://skills.stellar.org/skills/agentic-payments/mpp.md)
+  - [x402 — Paid APIs + Agent Buyer Clients](https://skills.stellar.org/skills/agentic-payments/x402.md)
 
 ### Frontend
 
 - [Frontend & Wallets](https://skills.stellar.org/skills/dapp/SKILL.md): Stellar dApp / frontend development. Covers the JavaScript stellar-sdk (browser + Node.js), Freighter wallet, Stellar Wallets Kit (multi-wallet), Wallet Standard, smart accounts with passkeys, transaction building / signing / submission, smart contract invocation from the client, simulation, and error handling. Use when building a React/Next.js/Node.js app that talks to Stellar — classic operations or smart contracts.
+  - [Client-Side Data Fetching](https://skills.stellar.org/skills/dapp/data-fetching.md)
+  - [React & Next.js Patterns](https://skills.stellar.org/skills/dapp/react.md)
+  - [Smart Accounts (Passkeys) & Fee Sponsorship](https://skills.stellar.org/skills/dapp/smart-accounts.md)
 
 ### Assets
 
@@ -83,6 +88,7 @@ The skills installed via the methods above, grouped by category.
 ### APIs
 
 - [RPC & Horizon APIs](https://skills.stellar.org/skills/data/SKILL.md): Querying Stellar chain data via Stellar RPC (preferred) and Horizon (legacy). Covers RPC JSON-RPC methods, Horizon REST endpoints, streaming, pagination, historical queries, Hubble/Galexie for deep history, and the RPC/Horizon migration story. Use when reading balances, transactions, operations, ledgers, contract events, or building any indexer/analytics workflow.
+  - [Horizon API (Legacy)](https://skills.stellar.org/skills/data/horizon.md)
 
 ### ZK
 
@@ -97,6 +103,8 @@ The skills installed via the methods above, grouped by category.
 ### Ecosystem
 
 - [SEPs, CAPs & Ecosystem](https://skills.stellar.org/skills/standards/SKILL.md): Stellar standards, ecosystem, and reference. Covers SEPs (Stellar Ecosystem Proposals), CAPs (Core Advancement Proposals), and a quick map for picking the right standard for wallets, anchors, payments, deposits/withdrawals, federation, deep links, and KYC. Also bundles ecosystem references (DeFi protocols, dev tools, wallets, infra, community projects), curated documentation links, and MCP servers (live tools such as Raven). Use when you need to know which SEP applies, or want a starting point for ecosystem integrations, official docs, or live MCP tooling.
+  - [Stellar Ecosystem](https://skills.stellar.org/skills/standards/ecosystem.md)
+  - [Curated Resources](https://skills.stellar.org/skills/standards/resources.md)
 
 ## Community Built
 
