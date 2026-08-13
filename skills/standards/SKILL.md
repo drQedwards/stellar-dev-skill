@@ -56,7 +56,7 @@ Treat this file as a routing map, not a source of final governance/status truth.
 - [SEP-0048](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md): Contract interface specification
 - [SEP-0049](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0049.md): Upgradeable-contract guidance
 - [SEP-0050](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0050.md): NFT standard work
-- [SEP-0055](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0055.md): Contract build verification
+- [SEP-0055](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0055.md): Contract build verification — a `source_repo` metadata entry in the WASM plus a GitHub build attestation let anyone trace a deployed contract hash back to the commit and workflow run that built it. Automate it with [soroban-build-workflow](https://github.com/stellar-expert/soroban-build-workflow); setup in [`../smart-contracts/SKILL.md`](../smart-contracts/SKILL.md#verify-your-build)
 - [SEP-0056](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0056.md): Vault-style tokenized products
 - [SEP-0057](https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0057.md): Regulated token patterns (T-REX)
 
