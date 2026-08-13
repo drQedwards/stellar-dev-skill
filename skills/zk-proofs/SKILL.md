@@ -1,6 +1,6 @@
 ---
 name: zk-proofs
-description: Zero-knowledge proofs and privacy patterns on Stellar. Covers Groth16 verification in smart contracts via BLS12-381 (CAP-0059, Protocol 22+) and BN254 (CAP-0074, Protocol 25+; MSM and Fr arithmetic via CAP-0080, Protocol 26+) host functions, Poseidon/Poseidon2 permutation primitives (CAP-0075, Protocol 25+), and concrete toolchain walkthroughs for Circom, Noir (UltraHonk verifiable on-chain via a community verifier, Protocol 26+), and RISC Zero (Groth16-wrapped receipts verify natively). Use when building privacy-preserving applications, ZK-verifier contracts, or wiring a proving toolchain to Stellar.
+description: Zero-knowledge proofs and privacy patterns on Stellar. Covers Groth16 verification in smart contracts via BLS12-381 host functions (CAP-59), the BN254 + Poseidon host functions (CAP-74/75), and concrete toolchain walkthroughs for Circom, Noir, and RISC Zero. Use when building privacy-preserving applications, ZK-verifier contracts, or wiring a proving toolchain to Stellar.
 user-invocable: true
 argument-hint: "[zk task]"
 ---
