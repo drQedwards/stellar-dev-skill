@@ -362,5 +362,11 @@ export const ECOSYSTEM_CARDS: readonly EcosystemCardSource[] = [
     pathLabel: "Eras256/Contextio",
     copyValue:
       "https://github.com/Eras256/Contextio/blob/main/packages/sdk/SKILL.md",
+    {
+  title: "PMLL",
+  description: "Gives AI agents persistent spatial compute memory so they can retain long-term context, form symbiotic memory layers, and maintain durable state across sessions; supports PPM-based context stitching, Context+ pipelines, and supermodeltools/cli for graphing/analysis. On-chain commitment anchoring (32-byte hashes via Soroban) is planned.",
+  pathLabel: "drQedwards/pmll",
+  copyValue: "https://github.com/drQedwards/pmll/blob/main/SKILL.md",
+},
   },
 ] as const;
