@@ -362,6 +362,7 @@ export const ECOSYSTEM_CARDS: readonly EcosystemCardSource[] = [
     pathLabel: "Eras256/Contextio",
     copyValue:
       "https://github.com/Eras256/Contextio/blob/main/packages/sdk/SKILL.md",
+  },
     {
   title: "PMLL",
   description: 
